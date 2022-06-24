@@ -1,6 +1,6 @@
 const { compare } = require("../helpers/bcrypt");
 const { payToToken } = require("../helpers/jwt");
-const { Customer, Product, Bookmark } = require("../models/index");
+const { Customer, Product, Bookmark, sequelize } = require("../models/index");
 
 const Xendit = require('xendit-node');
 const x = new Xendit({ secretKey: "xnd_development_oKkjbgV7ImIUxESL88RVMArQI1ktYzvFzcRBsXtPNISBCCMMc2kfdWkC9tJDMl" });
@@ -13,7 +13,6 @@ class CustomerController {
     static async registerCustomer(req, res, next) {
         try {
             const { name, username, email, password, phoneNumber, address } = req.body;
-            console.log(name, username, email, password, phoneNumber, address);
 
             const createdCustomer = await Customer.create({
                 name, username, email, password, phoneNumber, address
@@ -167,7 +166,7 @@ class CustomerController {
                 }
             });
             let allCartFixed = allCart.map(el => {
-                return { id: el.id, name: el.name, imgUrl: el.Product.imgUrl, qty: el.qty, paidPrice: el.Product.price * el.qty };
+                return { id: el.id, name: el.name, ProductId: el.ProductId, imgUrl: el.Product.imgUrl, qty: el.qty, paidPrice: el.Product.price * el.qty };
             });
             res.status(200).json(allCartFixed);
         } catch (err) {
@@ -179,28 +178,27 @@ class CustomerController {
             const { id } = req.params;
             const { id: custId } = req.cust;
             const { qty } = req.body;
-            console.log(qty, id, '===============');
+
             const foundProduct = await Product.findByPk(id);
-            console.log(foundProduct);
+
             const foundCustomer = await Customer.findByPk(custId);
 
             const stockUpdate = await Product.update({
                 stock: foundProduct.stock - +qty
             }, {
                 where: {
-                    id: id
+                    id: +id
                 }
             }
             );
 
-            const addProductToWislist = await Bookmark.create({
-                name: foundProduct.name,
-                CustomerId: custId,
-                ProductId: id,
-                qty: +qty,
-                status: "buy"
-            });
-
+            // const addProductToWislist = await Bookmark.create({
+            //     name: foundProduct.name,
+            //     CustomerId: custId,
+            //     ProductId: id,
+            //     qty: +qty,
+            //     status: "buy"
+            // });
             let paidPrice = +qty * foundProduct.price;
 
             const invoice = await i.createInvoice({
@@ -296,7 +294,7 @@ class CustomerController {
             }
 
             res.status(200).json({
-                mesage: `Succes to delete ${foundBookmark.name} from bookmark`
+                mesage: `Succes to delete ${foundBookmark.name} from cart`
             });
         } catch (err) {
             console.log(err);

@@ -94,18 +94,12 @@ class api3rdPartyController {
 
             });
             res.status(200).json(resp);
-            console.log(resp);
 
         } catch (err) {
             console.log(err);
         }
     }
 
-
-
-    static async getXenditInvoice(req, res, next) {
-
-    }
 }
 
 module.exports = api3rdPartyController;
